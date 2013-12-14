@@ -1,11 +1,11 @@
 require 'formula'
 
 class Synfig < Formula
-  url 'http://downloads.sourceforge.net/project/synfig/synfig/0.63.03/synfig-0.63.03.tar.gz'
   homepage 'http://synfig.org'
-  md5 '9bd77cd2fc2381adfbd50a7b9c1c6e7c'
+  url 'http://downloads.sourceforge.net/project/synfig/releases/0.64.1/source/synfig-0.64.1.tar.gz'
+  sha1 '19fe81f144100c3f5e14a1b88b26a9b659fee3b8'
 
-  head 'git://synfig.git.sourceforge.net/gitroot/synfig/synfig', :using => :git
+  head 'git://synfig.git.sourceforge.net/gitroot/synfig/synfig'
 
   depends_on 'pkg-config' => :build
   depends_on 'gettext'
@@ -13,10 +13,16 @@ class Synfig < Formula
   depends_on 'libsigc++'
   depends_on 'libxml++'
   depends_on 'imagemagick'
+  depends_on :libpng
+  depends_on :freetype
+  depends_on 'cairo'
+  depends_on 'pango'
+  depends_on 'boost'
+  depends_on :libtool => :run
 
   def install
-    ENV.libpng
-    system "./configure", "--disable-debug", "--disable-dependency-tracking",
+    system "./configure", "--disable-debug",
+                          "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make install"
   end

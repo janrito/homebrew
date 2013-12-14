@@ -2,7 +2,7 @@ require 'hardware'
 
 module Homebrew extend self
   def __config
-    puts config_s
+    dump_verbose_config
   end
 
   def llvm
@@ -25,69 +25,125 @@ module Homebrew extend self
     @clang_build ||= MacOS.clang_build_version
   end
 
-  def xcode_version
-    @xcode_version || MacOS.xcode_version
+  def xcode
+    if instance_variable_defined?(:@xcode)
+      @xcode
+    elsif MacOS::Xcode.installed?
+      @xcode = MacOS::Xcode.version
+      @xcode += " => #{MacOS::Xcode.prefix}" unless MacOS::Xcode.default_prefix?
+      @xcode
+    end
   end
 
-  def sha
-    sha = HOMEBREW_REPOSITORY.cd do
+  def clt
+    if instance_variable_defined?(:@clt)
+      @clt
+    elsif MacOS::CLT.installed? && MacOS::Xcode.version >= "4.3"
+      @clt = MacOS::CLT.version
+    end
+  end
+
+  def head
+    head = HOMEBREW_REPOSITORY.cd do
       `git rev-parse --verify -q HEAD 2>/dev/null`.chomp
     end
-    if sha.empty? then "(none)" else sha end
+    if head.empty? then "(none)" else head end
+  end
+
+  def origin
+    origin = HOMEBREW_REPOSITORY.cd do
+      `git config --get remote.origin.url 2>/dev/null`.chomp
+    end
+    if origin.empty? then "(none)" else origin end
+  end
+
+  def describe_path path
+    return "N/A" if path.nil?
+    realpath = path.realpath
+    if realpath == path then path else "#{path} => #{realpath}" end
+  end
+
+  def describe_x11
+    return "N/A" unless MacOS::XQuartz.installed?
+    return "#{MacOS::XQuartz.version} => #{describe_path(MacOS::XQuartz.prefix)}"
   end
 
   def describe_perl
-    perl = `which perl`.chomp
-    return "N/A" if perl.empty?
-
-    real_perl = Pathname.new(perl).realpath.to_s
-    return perl if perl == real_perl
-    return "#{perl} => #{real_perl}"
+    describe_path(which 'perl')
   end
 
   def describe_python
-    python = `which python`.chomp
-    return "N/A" if python.empty?
-
-    real_python = Pathname.new(python).realpath.to_s
-
-    return python if python == real_python
-    return "#{python} => #{real_python}"
+    describe_path(which 'python')
   end
 
   def describe_ruby
-    ruby = `which ruby`.chomp
-    return "N/A" if ruby.empty?
-
-    real_ruby = Pathname.new(ruby).realpath.to_s
-    return ruby if ruby == real_ruby
-    return "#{ruby} => #{real_ruby}"
+    describe_path(which 'ruby')
   end
 
-  def real_path a_path
-    Pathname.new(a_path).realpath.to_s
+  def hardware
+    "CPU: #{Hardware.cores_as_words}-core #{Hardware::CPU.bits}-bit #{Hardware::CPU.family}"
   end
 
-  def config_s; <<-EOS.undent
-    HOMEBREW_VERSION: #{HOMEBREW_VERSION}
-    HEAD: #{sha}
-    HOMEBREW_PREFIX: #{HOMEBREW_PREFIX}
-    HOMEBREW_CELLAR: #{HOMEBREW_CELLAR}
-    Hardware: #{Hardware.cores_as_words}-core #{Hardware.bits}-bit #{Hardware.intel_family}
-    OS X: #{MACOS_FULL_VERSION}
-    Kernel Architecture: #{`uname -m`.chomp}
-    Xcode: #{xcode_version}
-    GCC-4.0: #{gcc_40 ? "build #{gcc_40}" : "N/A"}
-    GCC-4.2: #{gcc_42 ? "build #{gcc_42}" : "N/A"}
-    LLVM: #{llvm ? "build #{llvm}" : "N/A"}
-    Clang: #{clang ? "#{clang} build #{clang_build}" : "N/A"}
-    MacPorts or Fink? #{macports_or_fink_installed?}
-    X11 installed? #{x11_installed?}
-    System Ruby: #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}
-    /usr/bin/ruby => #{real_path("/usr/bin/ruby")}
-    Which Perl:   #{describe_perl}
-    Which Python: #{describe_python}
-    Which Ruby:   #{describe_ruby}
-    EOS
+  def kernel
+    `uname -m`.chomp
+  end
+
+  def macports_or_fink
+    @ponk ||= MacOS.macports_or_fink
+    @ponk.join(", ") unless @ponk.empty?
+  end
+
+  # we try to keep output minimal
+  def dump_build_config
+    puts "HOMEBREW_VERSION: #{HOMEBREW_VERSION}"
+    puts "HEAD: #{head}"
+    puts "HOMEBREW_PREFIX: #{HOMEBREW_PREFIX}" if HOMEBREW_PREFIX.to_s != "/usr/local"
+    puts "HOMEBREW_CELLAR: #{HOMEBREW_CELLAR}" if HOMEBREW_CELLAR.to_s != "#{HOMEBREW_PREFIX}/Cellar"
+    puts hardware
+    puts "OS X: #{MACOS_FULL_VERSION}-#{kernel}"
+    puts "Xcode: #{xcode}" if xcode
+    puts "CLT: #{clt}" if clt
+    puts "#{RUBY_PATH}:\n  #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}" if RUBY_VERSION.to_f != 1.8
+
+    unless MacOS.compilers_standard?
+      puts "GCC-4.0: build #{gcc_40}" if gcc_40
+      puts "GCC-4.2: build #{gcc_42}" if gcc_42
+      puts "LLVM-GCC: build #{llvm}"  if llvm
+      puts "Clang: #{clang ? "#{clang} build #{clang_build}" : "N/A"}"
+    end
+
+    puts "MacPorts/Fink: #{macports_or_fink}" if macports_or_fink
+
+    puts "X11: #{describe_x11}"
+  end
+
+  def write_build_config f
+    stdout = $stdout
+    $stdout = f
+    Homebrew.dump_build_config
+  ensure
+    $stdout = stdout
+  end
+
+  def dump_verbose_config
+    puts "HOMEBREW_VERSION: #{HOMEBREW_VERSION}"
+    puts "ORIGIN: #{origin}"
+    puts "HEAD: #{head}"
+    puts "HOMEBREW_PREFIX: #{HOMEBREW_PREFIX}"
+    puts "HOMEBREW_CELLAR: #{HOMEBREW_CELLAR}"
+    puts hardware
+    puts "OS X: #{MACOS_FULL_VERSION}-#{kernel}"
+    puts "Xcode: #{xcode}" if xcode
+    puts "CLT: #{clt}" if clt
+    puts "GCC-4.0: build #{gcc_40}" if gcc_40
+    puts "GCC-4.2: build #{gcc_42}" if gcc_42
+    puts "LLVM-GCC: build #{llvm}"  if llvm
+    puts "Clang: #{clang ? "#{clang} build #{clang_build}" : "N/A"}"
+    puts "MacPorts/Fink: #{macports_or_fink}" if macports_or_fink
+    puts "X11: #{describe_x11}"
+    puts "System Ruby: #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}"
+    puts "Perl: #{describe_perl}"
+    puts "Python: #{describe_python}"
+    puts "Ruby: #{describe_ruby}"
   end
 end

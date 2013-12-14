@@ -2,17 +2,16 @@ require 'formula'
 
 class GitExtras < Formula
   homepage 'https://github.com/visionmedia/git-extras'
-  url 'https://github.com/visionmedia/git-extras/tarball/1.4.0'
-  sha1 '9471ae1df77e561980983e2ae7e7d1f6b74e95bc'
+  url 'https://github.com/visionmedia/git-extras/archive/1.9.0.tar.gz'
+  sha1 'c4ebdeceaf4cdfde424beef4edca51aa050297f9'
 
   head 'https://github.com/visionmedia/git-extras.git', :branch => 'master'
 
-  def install
-    # fixed in HEAD to respect PREFIX
-    inreplace 'Makefile' do |s|
-      s.gsub! '/etc/bash_completion.d', "#{prefix}/etc/bash_completion.d"
-    end unless ARGV.build_head?
+  # Don't take +x off these files
+  skip_clean 'bin'
 
+  def install
+    inreplace 'Makefile', %r|\$\(DESTDIR\)(?=/etc/bash_completion\.d)|, '$(DESTDIR)$(PREFIX)'
     system "make", "PREFIX=#{prefix}", "install"
   end
 end

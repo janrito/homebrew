@@ -2,16 +2,16 @@ require 'formula'
 
 class Qscintilla2 < Formula
   homepage 'http://www.riverbankcomputing.co.uk/software/qscintilla/intro'
-  url 'http://www.riverbankcomputing.co.uk/static/Downloads/QScintilla2/QScintilla-gpl-2.6.1.tar.gz'
-  sha1 'c68dbeaafb4f5dbe0d8200ae907cced0c7762e19'
+  url 'http://downloads.sf.net/project/pyqt/QScintilla2/QScintilla-2.7.1/QScintilla-gpl-2.7.1.tar.gz'
+  sha1 '646b5e6e6658c70d9bca034d670a3b56690662f2'
 
   depends_on 'pyqt'
   depends_on 'sip'
+  depends_on :python
 
   def install
-    ENV.prepend 'PYTHONPATH', "#{HOMEBREW_PREFIX}/lib/python", ':'
 
-    cd 'Qt4' do
+    cd 'Qt4Qt5' do
       inreplace 'qscintilla.pro' do |s|
         s.gsub! '$$[QT_INSTALL_LIBS]', lib
         s.gsub! "$$[QT_INSTALL_HEADERS]", include
@@ -24,20 +24,22 @@ class Qscintilla2 < Formula
       system "make", "install"
     end
 
-    cd 'Python' do
-      system 'python', 'configure.py', "-o", lib, "-n", include,
-                       "--apidir=#{prefix}/qsci",
-                       "--destdir=#{lib}/python/PyQt4",
-                       "--sipdir=#{share}/sip"
-      system 'make'
-      system 'make', 'install'
+    python do
+      cd 'Python' do
+        (share/"sip#{python.if3then3}").mkpath
+        system python, 'configure.py', "-o", lib, "-n", include,
+                         "--apidir=#{prefix}/qsci",
+                         "--destdir=#{python.site_packages}/PyQt4",
+                         "--qsci-sipdir=#{share}/sip#{python.if3then3}",
+                         "--pyqt-sipdir=#{HOMEBREW_PREFIX}/share/sip#{python.if3then3}"
+        system 'make'
+        system 'make', 'install'
+      end
     end
   end
 
-  def caveats; <<-EOS.undent
-    This formula includes a Python module that will not be functional until you
-    amend your PYTHONPATH:
-        export PYTHONPATH=#{HOMEBREW_PREFIX}/lib/python:$PYTHONPATH
-    EOS
+  def caveats
+    python.standard_caveats if python
   end
+
 end

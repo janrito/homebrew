@@ -2,11 +2,11 @@ require 'formula'
 
 class Repo < Formula
   homepage 'http://source.android.com/source/git-repo.html'
-  url 'http://git-repo.googlecode.com/files/repo-1.14'
-  sha1 '29ba4221d4fccdfa8d87931cd73466fdc24040b5'
-  version '1.14'
+  url 'https://raw.github.com/android/tools_repo/v1.12.4/repo'
+  version '1.20'
+  sha1 'e197cb48ff4ddda4d11f23940d316e323b29671c'
 
   def install
-    bin.install "repo-#{version}" => 'repo'
+    bin.install 'repo'
   end
 end

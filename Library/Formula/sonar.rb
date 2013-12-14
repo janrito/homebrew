@@ -1,9 +1,9 @@
 require 'formula'
 
 class Sonar < Formula
-  homepage 'http://www.sonarsource.org'
-  url 'http://dist.sonar.codehaus.org/sonar-2.13.1.zip'
-  md5 '37e0502e07e197b8e3a382c64fac8e1d'
+  homepage 'http://www.sonarqube.org/'
+  url 'http://dist.sonar.codehaus.org/sonarqube-4.0.zip'
+  sha1 '6b4bcf77b6351b8d289a00d5b2bea5c9f84d54b4'
 
   def install
     # Delete native bin directories for other systems
@@ -24,5 +24,26 @@ class Sonar < Formula
     else
       bin.install_symlink "#{libexec}/bin/macosx-universal-32/sonar.sh" => "sonar"
     end
+  end
+
+  plist_options :manual => "#{HOMEBREW_PREFIX}/opt/sonar/bin/sonar console"
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+        <string>#{opt_prefix}/bin/sonar</string>
+        <string>start</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+    </dict>
+    </plist>
+    EOS
   end
 end

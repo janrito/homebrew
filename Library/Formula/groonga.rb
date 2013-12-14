@@ -1,12 +1,19 @@
 require 'formula'
 
 class Groonga < Formula
-  url 'http://packages.groonga.org/source/groonga/groonga-1.3.0.tar.gz'
   homepage 'http://groonga.org/'
-  md5 'd8b3ada75185b59665131e4eee30d107'
+  url 'http://packages.groonga.org/source/groonga/groonga-3.1.0.tar.gz'
+  sha1 '7d4ad3be8ade2b97ccf6790063b2b08d111daa59'
+
+  depends_on 'pkg-config' => :build
+  depends_on 'pcre'
+  depends_on 'msgpack'
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--with-zlib"
+    # ZeroMQ is an optional dependency that will be auto-detected unless we disable it
+    system "./configure", "--prefix=#{prefix}",
+                          "--with-zlib",
+                          "--disable-zeromq"
     system "make install"
   end
 end

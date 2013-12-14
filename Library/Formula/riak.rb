@@ -1,33 +1,28 @@
 require 'formula'
 
 class Riak < Formula
-  homepage 'http://wiki.basho.com/Riak.html'
+  homepage 'http://basho.com/riak/'
+  url 'http://s3.amazonaws.com/downloads.basho.com/riak/1.4/1.4.2/osx/10.8/riak-1.4.2-OSX-x86_64.tar.gz'
+  version '1.4.2'
+  sha256 '2accc58a0ea2f7bd3edc31c934edb0bff6a1535994607fd6cec9c6bbefcf2abf'
 
-  if Hardware.is_64_bit? and not ARGV.build_32_bit?
-    url 'http://downloads.basho.com.s3-website-us-east-1.amazonaws.com/riak/1.1/1.1.0/riak-1.1.0-osx-x86_64.tar.gz'
-    version '1.1.0-x86_64'
-    sha256 '4f885a4952661500fd45ef114a1f89c88f8fd40870d4a421a6d7139eaa2966c0'
-  else
-    url 'http://downloads.basho.com.s3-website-us-east-1.amazonaws.com/riak/1.1/1.1.0/riak-1.1.0-osx-i386.tar.gz'
-    version '1.1.0-i386'
-    sha256 '757a179244a2f8bb811925626eda5df24f15dd0e0b16a4b1337913ecd6a382be'
+  devel do
+    url 'http://s3.amazonaws.com/downloads.basho.com/riak/2.0/2.0.0pre5/osx/10.8/riak-2.0.0pre5-OSX-x86_64.tar.gz'
+    sha1 '2394a7244329b60afd87307e3362d784a1611689'
+    version '2.0.0-pre5'
   end
 
-  skip_clean :all
-
-  def options
-    [['--32-bit', 'Build 32-bit only.']]
-  end
+  depends_on :macos => :mountain_lion
+  depends_on :arch => :x86_64
 
   def install
     libexec.install Dir['*']
-
-    # The scripts don't dereference symlinks correctly.
-    # Help them find stuff in libexec. - @adamv
-    inreplace Dir["#{libexec}/bin/*"] do |s|
-      s.change_make_var! "RUNNER_SCRIPT_DIR", "#{libexec}/bin"
+    inreplace Dir["#{libexec}/lib/env.sh"] do |s|
+      s.change_make_var! "RUNNER_BASE_DIR", prefix/libexec
     end
-
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    bin.write_exec_script libexec/'bin/riak'
+    bin.write_exec_script libexec/'bin/riak-admin'
+    bin.write_exec_script libexec/'bin/riak-debug'
+    bin.write_exec_script libexec/'bin/search-cmd'
   end
 end

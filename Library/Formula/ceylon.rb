@@ -2,13 +2,13 @@ require 'formula'
 
 class Ceylon < Formula
   homepage 'http://ceylon-lang.org/'
-  url 'http://ceylon-lang.org/download/dist/1_0_Milestone1'
-  version '1.0.M1'
-  md5 '627ebfc52fc9ba93fc63df59f8309509'
+  url 'http://ceylon-lang.org/download/dist/1_0_0'
+  sha1 '24737e1816c16497cb4b504d857530e1a171c2bf'
 
   def install
     rm_f Dir["bin/*.bat"]
 
+    man1.install Dir['doc/man/man1/*']
     doc.install Dir['doc/*']
     libexec.install Dir['*']
 
@@ -16,11 +16,15 @@ class Ceylon < Formula
     bin.install_symlink Dir["#{libexec}/bin/ceylon*"]
   end
 
+  def caveats
+    "Ceylon requires Java 7."
+  end
+
   def test
     cd "#{libexec}/samples/helloworld" do
-      system "#{bin}/ceylonc", "com.acme.helloworld"
-      system "#{bin}/ceylond", "-private", "com.acme.helloworld"
-      system "#{bin}/ceylon", "com.acme.helloworld/1.0.0", "John"
+      system "#{bin}/ceylon", "compile", "com.acme.helloworld"
+      system "#{bin}/ceylon", "doc", "--non-shared", "com.acme.helloworld"
+      system "#{bin}/ceylon", "run", "com.acme.helloworld/1.0.0", "John"
     end
   end
 end

@@ -1,41 +1,34 @@
 require 'formula'
 
 class Autoconf < Formula
-  url 'http://ftpmirror.gnu.org/autoconf/autoconf-2.68.tar.gz'
   homepage 'http://www.gnu.org/software/autoconf'
-  md5 'c3b5247592ce694f7097873aa07d66fe'
+  url 'http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
+  mirror 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
+  sha1 '562471cbcb0dd0fa42a76665acf0dbb68479b78a'
 
-  def patches
-    # force autoreconf to look for and use our glibtoolize
-    DATA
+  bottle do
+    sha1 '2b69898b2827740e5983e25c7f20c0328201b256' => :mavericks
+    sha1 'ec30045d8fe4be10858b66d59f029fb19fe63b5e' => :mountain_lion
+    sha1 'e7d6d88e762996c2fb96238f7d9e48e6d0feaeba' => :lion
   end
 
-  if MacOS.xcode_version.to_f < 4.3 or File.file? "/usr/bin/autoconf"
+  if MacOS::Xcode.provides_autotools? or File.file? "/usr/bin/autoconf"
     keg_only "Xcode (up to and including 4.2) provides (a rather old) Autoconf."
   end
 
   def install
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
+    ENV['PERL'] = '/usr/bin/perl'
+
+    # force autoreconf to look for and use our glibtoolize
+    inreplace 'bin/autoreconf.in', 'libtoolize', 'glibtoolize'
+    # also touch the man page so that it isn't rebuilt
+    inreplace 'man/autoreconf.1', 'libtoolize', 'glibtoolize'
+    system "./configure", "--prefix=#{prefix}"
     system "make install"
   end
 
-  def test
-    system "#{HOMEBREW_PREFIX}/bin/autoconf --version"
+  test do
+    cp "#{share}/autoconf/autotest/autotest.m4", 'autotest.m4'
+    system "#{bin}/autoconf", 'autotest.m4'
   end
 end
-
-
-__END__
-diff --git a/bin/autoreconf.in b/bin/autoreconf.in
-index 192c8fa..70a1d72 100644
---- a/bin/autoreconf.in
-+++ b/bin/autoreconf.in
-@@ -112,7 +112,7 @@ my $autoheader = $ENV{'AUTOHEADER'} || '@bindir@/@autoheader-name@';
- my $autom4te   = $ENV{'AUTOM4TE'}   || '@bindir@/@autom4te-name@';
- my $automake   = $ENV{'AUTOMAKE'}   || 'automake';
- my $aclocal    = $ENV{'ACLOCAL'}    || 'aclocal';
--my $libtoolize = $ENV{'LIBTOOLIZE'} || 'libtoolize';
-+my $libtoolize = $ENV{'LIBTOOLIZE'} || 'glibtoolize';
- my $autopoint  = $ENV{'AUTOPOINT'}  || 'autopoint';
- my $make       = $ENV{'MAKE'}       || 'make';
- 

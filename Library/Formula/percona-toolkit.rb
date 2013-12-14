@@ -2,37 +2,52 @@ require 'formula'
 
 class PerconaToolkit < Formula
   homepage 'http://www.percona.com/software/percona-toolkit/'
-  url 'http://www.percona.com/redir/downloads/percona-toolkit/2.0.2/percona-toolkit-2.0.2.tar.gz'
-  md5 '74f55df529b2527853d4d907f0175c0d'
+  url 'http://www.percona.com/redir/downloads/percona-toolkit/2.2.5/percona-toolkit-2.2.5.tar.gz'
+  sha1 'fbbf5db4e64bb12e281962ab2fcc368c69f2415e'
 
   depends_on 'Time::HiRes' => :perl
   depends_on 'DBD::mysql' => :perl
 
   def install
-    system "perl Makefile.PL PREFIX=#{prefix}"
+    system "perl", "Makefile.PL", "PREFIX=#{prefix}"
     system "make"
     system "make test"
     system "make install"
   end
 
   def test
-    system "pt-archiver"
-    system "pt-config-diff"
-    system "pt-deadlock-logger"
-    system "pt-duplicate-key-checker"
-    system "pt-find"
-    system "pt-fk-error-logger"
-    system "pt-heartbeat"
-    system "pt-kill"
-    system "pt-log-player"
-    system "pt-pmp"
-    system "pt-slave-delay"
-    system "pt-slave-find"
-    system "pt-slave-restart"
-    system "pt-summary"
-    system "pt-table-checksum"
-    system "pt-table-sync"
-    system "pt-upgrade"
-    system "pt-variable-advisor"
+    system "#{bin}/pt-agent"
+    system "#{bin}/pt-align"
+    system "#{bin}/pt-archiver"
+    system "#{bin}/pt-config-diff"
+    system "#{bin}/pt-deadlock-logger"
+    system "#{bin}/pt-diskstats"
+    system "#{bin}/pt-duplicate-key-checker"
+    system "#{bin}/pt-fifo-split"
+    system "#{bin}/pt-find"
+    system "#{bin}/pt-fingerprint"
+    system "#{bin}/pt-fk-error-logger"
+    system "#{bin}/pt-heartbeat"
+    system "#{bin}/pt-index-usage"
+    system "#{bin}/pt-ioprofile"
+    system "#{bin}/pt-kill"
+    system "#{bin}/pt-mext"
+    system "#{bin}/pt-mysql-summary"
+    system "#{bin}/pt-online-schema-change"
+    system "#{bin}/pt-pmp"
+    system "#{bin}/pt-query-digest"
+    system "#{bin}/pt-show-grants"
+    system "#{bin}/pt-sift"
+    system "#{bin}/pt-slave-delay"
+    system "#{bin}/pt-slave-find"
+    system "#{bin}/pt-slave-restart"
+    system "#{bin}/pt-stalk"
+    system "#{bin}/pt-summary"
+    system "#{bin}/pt-table-checksum"
+    system "#{bin}/pt-table-sync"
+    system "#{bin}/pt-table-usage"
+    system "#{bin}/pt-upgrade"
+    system "#{bin}/pt-variable-advisor"
+    system "#{bin}/pt-visual-explain"
   end
 end

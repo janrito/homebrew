@@ -1,34 +1,35 @@
 require 'formula'
 
 class GitCola < Formula
-  url 'https://github.com/downloads/git-cola/git-cola/git-cola-1.7.4.1.tar.gz'
-  homepage 'http://git-cola.github.com/'
-  md5 'd0f667c91e12a707df73060bf0822c27'
+  homepage 'http://git-cola.github.io/'
+  url 'https://github.com/git-cola/git-cola/archive/v1.9.2.tar.gz'
+  sha1 '62becefdfa2b899d123259b9d640ab2090a5062c'
 
   head 'https://github.com/git-cola/git-cola.git'
 
+  option 'with-docs', "Build man pages using asciidoc and xmlto"
+
+  depends_on :python
   depends_on 'pyqt'
 
-  def options
-    [['--build-docs', "Build man pages using asciidoc and xmlto"]]
-  end
-
-  if ARGV.include? '--build-docs'
+  if build.include? 'with-docs'
     # these are needed to build man pages
     depends_on 'asciidoc'
     depends_on 'xmlto'
   end
 
   def install
-    ENV.prepend 'PYTHONPATH', "#{HOMEBREW_PREFIX}/lib/python", ':'
-    system "make", "prefix=#{prefix}", "install"
+    python do
+      # The python do block creates the PYTHONPATH and temp. site-packages
+      system "make", "prefix=#{prefix}", "install"
 
-    if ARGV.include? '--build-docs'
-      system "make",
-             "-C", "share/doc/git-cola",
-             "-f", "Makefile.asciidoc",
-             "prefix=#{prefix}",
-             "install", "install-html"
+      if build.include? 'with-docs'
+        system "make", "-C", "share/doc/git-cola",
+                       "-f", "Makefile.asciidoc",
+                       "prefix=#{prefix}",
+                       "install", "install-html"
+      end
     end
   end
+
 end
